@@ -5,9 +5,12 @@ from vrp.load.location import Location
 
 class Load(NamedTuple):
     """
-    Defines the locations a load must be picked up and where it must be dropped off.
+    Defines the location this load is picked up and the location where it is to be dropped off.
     """
 
-    id: int
+    # The identifier for this load
+    load_number: int
+    # The location the load is picked up
     pickup: Location
+    # The location the load is dropped off
     drop_off: Location
