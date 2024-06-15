@@ -80,3 +80,10 @@ Green threads, managed in the user space rather than by the operating system, ar
 * As the calculations for this problem require simple arithmetic, utilizing GPU compute features would allow for 1000s of calculations to be performed in parallel. This would require a significant investment in hardware and software, and would not be cost effective for this challeng.
 * The problem could be solved using a genetic algorithm, which would allow for a more efficient search of the solution space. This would require significant development time and would be cost prohibitive.
 * The problem could be solved using a constraint programming library, such as Google's OR-Tools. This is against the rules of the challenge.
+
+### Future Improvements
+
+* Loads should be defined as latitude and longitude, and the distance between loads should be calculated using the Haversine formula.
+* The weight and volume of each load effects which trucks can even complete the load, altering the total cost and fuel efficiency of the vehicles.
+* The cost of each route should be calculated using a cost per mile, rather than a flat fee of $1 per minute. This would allow for the optimization of the most cost effective route, rather than the most time efficient route.
+* The cost of each truck should be calculated using a cost per mile, rather than a flat fee of $1 per minute. This would allow for the optimization  of the most cost effective truck, rather than the most time efficient truck.
