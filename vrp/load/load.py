@@ -13,4 +13,6 @@ class Load(NamedTuple):
     # The location the load is picked up
     pickup: Location
     # The location the load is dropped off
-    drop_off: Location
+    dropoff: Location
+    # The distance between the pickup and dropoff locations
+    distance: float
