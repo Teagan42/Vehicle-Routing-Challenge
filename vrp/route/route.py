@@ -5,8 +5,10 @@ from vrp.load.load import Load
 
 class Route(NamedTuple):
     """
-    Defines a driver's route as a sequence of stops.
+    A sequence of loads with the total distance travelled over this route.
     """
 
-    driverId: int
+    # The stops, in sequential order, that make up the route.
     loads: List[Load]
+    # The total distance the route covers.
+    distance: float
