@@ -42,6 +42,7 @@ In practice, many of the following assumptions would be discussed with product a
 ### Assumptions
     
 * Each load must be handled by one truck
+* Loads cannot be completed while completing another load
 * Load weight does not effect cost
 * Load volume does not effect cost
 * Trucks can handle infinite weight
