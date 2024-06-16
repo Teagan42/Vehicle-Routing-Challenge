@@ -1,9 +1,16 @@
-from typing import Callable, Dict
+import asyncio
+import re
+from os import PathLike
+from typing import Any, Callable, Dict
 
-import pandas as pd
-from numpy import sqrt
+import aiofiles
 
-from vrp.const import ORIGIN
+from vrp.common.types.coordinate import Coordinate
+from vrp.common.types.delivery_load import DeliveryLoad
+
+regex_load_line = re.compile(
+    "^(?P<load_number>[-\d\.]+)[,\s]+\(?(?P<pickup_latitude>(?:[\d\.-]+))[ ,]\(?(?P<pickup_longitude>(?:[\d\.-]+))\)?[,\s]+\(?(?P<dropoff_latitude>(?:[\d\.-]+))[ ,]\(?(?P<dropoff_longitude>(?:[\d\.-]+))\)[\s]*?"
+)
 
 
 def _parse_coordinate(coordinateString: str) -> Dict[str, float]:
@@ -20,83 +27,41 @@ def _parse_coordinate(coordinateString: str) -> Dict[str, float]:
     return {"latitude": latitude, "longitude": longitude}
 
 
-def euclidean_distance(a: Dict[str, float], b: Dict[str, float]) -> float:
-    """
-    Calculate the Euclidean distance between two locations.
-    """
-    return sqrt(
-        (a["latitude"] - b["latitude"]) ** 2 + (a["longitude"] - b["longitude"]) ** 2
-    )
+class FileLoader:
 
+    def __init__(self, add_delivery_load: Callable[[DeliveryLoad], Any]) -> None:
+        self.line_format = regex_load_line
+        self._add_delivery_load = add_delivery_load
 
-def get_distances(
-    df: pd.DataFrame, current: Dict[str, float] = ORIGIN
-) -> Callable[[pd.Series], pd.Series]:
-    """
-    Returns a function that adds a set of 'distance' columns with the calculated Euclidean distance as values
-
-    Args:
-        df (pd.DataFrame): The DataFrame containing the set of loads
-
-    Returns:
-        Callable[[pd.Series], pd.Series]: The method to apply to each series in the DataFrame
-    """
-
-    def add_distance_to(ds: pd.Series) -> pd.Series:
+    async def _parse_line(self, line: str):
         """
-        Adds the following columns to the series:
-            * distance: the Euclidean distance from pickup to drop off
-            * originToPickupDistance: the Euclidean distance from origin to pickup
-            * dropoffToOriginDistance: the Euclidean distance from dropoff to origin
-            * originToPickupToDropoff: The total distance this load would starting from the origin
-            * distanceTo: Dictionary with loadNumber as key and the Euclidean distance from 'dropoff' to the other load's 'pickup'
+        Parses a string representing a 'load' to be delivered.
 
         Args:
-            ds (pd.Series): A series from the load dataset
-
-        Returns:
-            pd.Series: The series with the added distance columns
+            lint (str): A string containing the loadNumber, and pickup/dropoff coordinates. Expected format `loadNumber (pickup_latitude,pickup_longitude) (dropoff_latitude,dropoff_longitude)
         """
-        distance = euclidean_distance(ds["pickup"], ds["dropoff"])
-        originToPickupDistance = euclidean_distance(ORIGIN, ds["pickup"])
-        distances = {
-            "distance": distance,
-            "originToPickupDistance": originToPickupDistance,
-            "dropoffToOriginDistance": euclidean_distance(ds["dropoff"], ORIGIN),
-            "originToPickupToDropoff": distance + originToPickupDistance,
-            "distanceTo": {
-                id: euclidean_distance(ds["dropoff"], dsLoad["pickup"])
-                for id, dsLoad in df.iterrows()
-                if dsLoad.name != ds.name
-            },
-        }
+        if line is None:
+            return
+        match = regex_load_line.match(line)
+        if match is None:
+            return
+        pickup = Coordinate(
+            latitude=float(match.group("pickup_latitude")),
+            longitude=float(match.group("pickup_longitude")),
+        )
+        dropoff = Coordinate(
+            latitude=float(match.group("dropoff_latitude")),
+            longitude=float(match.group("dropoff_longitude")),
+        )
+        load_number = int(match.group("load_number"))
+        self._add_delivery_load(
+            DeliveryLoad(start=pickup, end=dropoff, load_number=load_number)
+        )
 
-        print(ds)
-        return ds.combine_first(pd.Series(distances))
+    async def read(self, filePath: PathLike):
+        async with aiofiles.open(filePath, "r") as file:
+            file_tasks = []
+            async for line in file:
+                file_tasks.append(asyncio.create_task((self._parse_line(line))))
 
-    return add_distance_to
-
-
-def read_loads_file(file_path: str, delimiter=" ") -> pd.DataFrame:
-    """
-    Reads a loads file into a DataFrame, adding a 'distance' column with the calculated Euclidean distance between 'pickup' and 'dropoff' columns.
-
-    Args:
-        file_path (str): the path to the file containing the set of loads
-
-    Returns:
-        pd.DataFrame: DataFrame with index 'loadNumber', columns 'pickup' and 'dropoff' separated into latitude and longitude, and 'distance' column calcualted from 'pickup' and 'dropoff'
-    """
-    df = pd.read_csv(
-        file_path,
-        delimiter=delimiter,
-        index_col="loadNumber",
-        converters={
-            "pickup": _parse_coordinate,
-            "dropoff": _parse_coordinate,
-        },
-    )
-
-    return df.apply(get_distances(df), axis=1).sort_values(
-        by="originToPickupToDropoff", ascending=False
-    )
+            await asyncio.gather(*file_tasks)
