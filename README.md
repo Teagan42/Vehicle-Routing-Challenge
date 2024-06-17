@@ -88,3 +88,7 @@ Green threads, managed in the user space rather than by the operating system, ar
 * The weight and volume of each load effects which trucks can even complete the load, altering the total cost and fuel efficiency of the vehicles.
 * The cost of each route should be calculated using a cost per mile, rather than a flat fee of $1 per minute. This would allow for the optimization of the most cost effective route, rather than the most time efficient route.
 * The cost of each truck should be calculated using a cost per mile, rather than a flat fee of $1 per minute. This would allow for the optimization  of the most cost effective truck, rather than the most time efficient truck.
+
+##  Running
+
+To run the

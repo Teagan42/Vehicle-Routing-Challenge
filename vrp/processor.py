@@ -1,4 +1,5 @@
 from typing import List, cast
+import gevent
 import pandas as pd
 from scipy.spatial import distance_matrix
 
@@ -11,6 +12,7 @@ from .common import (
     LoadDeliveryData,
     Truck,
     calculate_cost,
+    flatten_array,
 )
 
 
@@ -66,21 +68,23 @@ class RouteProcessor:
         )
 
     def run(self):
-        greenlets = [
-            RouteWorker(
-                self.max_distance,
-                self.load_distances,
-                strategy_cls(),
-            ).find_optimal_routes()
-            for strategy_cls in routing_strategies
-        ]
+        greenlets = flatten_array(
+            [
+                RouteWorker(
+                    self.max_distance,
+                    self.load_distances,
+                    strategy_cls(),
+                ).find_optimal_routes()
+                for strategy_cls in routing_strategies
+            ]
+        )
 
-        # gevent.joinall(greenlets)
+        gevent.joinall(greenlets)
 
         cheapest: List[Truck] = []
         cost: float = MAX_FLOAT
 
-        for results in [g for g in greenlets if g is not None]:
+        for results in [g.value for g in greenlets if g.value is not None]:
             trucks = cast(List[Truck], results)
             total_cost = calculate_cost(trucks)
 
