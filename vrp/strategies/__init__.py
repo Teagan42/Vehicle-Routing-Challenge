@@ -17,5 +17,5 @@ routing_strategies = [
     # LeastStopsStrategy,
     # NearestNeighborStrategy,
     NearestAndShortestJobStrategy,
-    ShortedJobStrategy,
+    # ShortedJobStrategy,
 ]

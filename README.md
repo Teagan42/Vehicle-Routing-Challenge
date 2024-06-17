@@ -2,6 +2,31 @@
 
 This repository contains my solution to a vehicle routing problem. In addition to providing a solution to the challenge itself, assumptions are presented to facilitate some of the gaps that occur with many requirements of feature and product requests and to have a bit of fun.
 
+##  Running
+
+To run the application:
+
+1. Install dependencies:
+```shell
+pip3 install -r requirements.txt
+```
+2. Run the `vrp` module, passing as a positional argument a path to a problem set file
+
+```shell
+python3 -m vrp data/problem4.txt
+```
+
+Currently, only one routing strategy is enabled, the others are simply commented out. Feel free to compare the results by enabling the other routing strategies under `vrp/strategies/__init__.py`
+
+```python
+routing_strategies = [
+    # LeastStopsStrategy,
+    # NearestNeighborStrategy,
+    NearestAndShortestJobStrategy,
+    # ShortedJobStrategy,
+]
+```
+
 ## Defining the Problem
 
 We have agreed to handle a set of orders; each order requires a pickup and delivery to be made.
@@ -84,11 +109,20 @@ Green threads, managed in the user space rather than by the operating system, ar
 
 ### Future Improvements
 
-* Loads should be defined as latitude and longitude, and the distance between loads should be calculated using the Haversine formula.
-* The weight and volume of each load effects which trucks can even complete the load, altering the total cost and fuel efficiency of the vehicles.
-* The cost of each route should be calculated using a cost per mile, rather than a flat fee of $1 per minute. This would allow for the optimization of the most cost effective route, rather than the most time efficient route.
-* The cost of each truck should be calculated using a cost per mile, rather than a flat fee of $1 per minute. This would allow for the optimization  of the most cost effective truck, rather than the most time efficient truck.
+Sadly, the time I had to work on this was interrupted by family and it is not as up to par with my usual standards. Honestly, it's a bit embarrassing to present to the world. 
 
-##  Running
+Things that I would like to have improved:
+* Utilizing pandas and scipy to improve the optimization. I know the ability to perform the linear algebra to optimize the routes is available, and I will continue to attempt to learn more about these tools
+* Since the distance travelled is equivalent to the travel time, I had thought about how optimizing the schedule along with the route could have been benefitcial.
+* Considering how little time was allotted to begin with, let alone the interruption, I would have preferred to explore this challenge using GoLang and goroutines.
 
-To run the
+### Grading My Work
+
+Personally, I would give this project a C at best - there's something in the routing logic that seems to prefer assigning more and more vehicles instead of more stops to less vehicles. Since the challenge was to reduce cost, in that aspect I failed.
+
+However, I did try to implement a few different routing strategies - and they do all effect the final result pretty drastically.
+* Nearest Neighbor
+* Shortest Delivery Duration
+* Minimizing Stops
+* Closest and Shortest Delivery
+
