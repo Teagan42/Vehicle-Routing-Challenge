@@ -20,9 +20,7 @@ setup(
     include_package_data=True,
     license="MIT",
     keywords="Vehicle Routing, Traveling Salesman",
-    # entry_points={
-    #     "console_scripts": [
-    #
-    #     ],
-    # },
+    entry_points={
+        "console_scripts": ["get_routes = vrp.main:main"],
+    },
 )
